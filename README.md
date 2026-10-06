@@ -4,7 +4,7 @@ Konsolenprojekt im Rahmen des C#-Moduls.
 
 ## Projektübersicht
 
-![Budget Tracker – Projektübersicht](docs/budget-tracker-projektuebersicht.jpg)
+![Budget Tracker – Projektübersicht](docs/budget-tracker-projektuebersicht.svg)
 
 ## Start
 
