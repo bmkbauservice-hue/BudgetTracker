@@ -42,4 +42,36 @@ public class StorageService
         string newJson = JsonSerializer.Serialize(transactions, _jsonOptions);
         File.WriteAllText(filePath, newJson);
     }
+
+    // Entfernt eine Transaktion anhand ihrer Id aus den gespeicherten Dateien.
+    public bool RemoveTransaction(Guid id)
+    {
+        string[] files = Directory.GetFiles(_dataDirectory, "*.json");
+
+        foreach (string file in files)
+        {
+            string json = File.ReadAllText(file);
+
+            List<Transaction> transactions =
+                JsonSerializer.Deserialize<List<Transaction>>(json, _jsonOptions)
+                ?? new List<Transaction>();
+
+            var transaction = transactions.FirstOrDefault(t => t.Id == id);
+
+            if (transaction is null)
+            {
+                continue;
+            }
+
+            transactions.Remove(transaction);
+
+            string newJson = JsonSerializer.Serialize(transactions, _jsonOptions);
+            File.WriteAllText(file, newJson);
+
+            return true;
+        }
+
+        return false;
+    }
+
 }

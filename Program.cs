@@ -73,7 +73,26 @@ while (running)
             break;
 
         case "2":
-            Console.WriteLine("Transaktion entfernen kommt später.");
+            Console.Write("Id der Transaktion: ");
+            string? idInput = Console.ReadLine();
+
+            if (!Guid.TryParse(idInput, out Guid id))
+            {
+                Console.WriteLine("Ungültige Id.");
+                break;
+            }
+
+            bool removed = storageService.RemoveTransaction(id);
+
+            if (removed)
+            {
+                Console.WriteLine("Transaktion wurde entfernt.");
+            }
+            else
+            {
+                Console.WriteLine("Keine Transaktion mit dieser Id gefunden.");
+            }
+
             break;
 
         case "3":
