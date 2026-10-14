@@ -1,4 +1,7 @@
 using BudgetTracker.Models;
+using BudgetTracker.Services;
+
+var storageService = new StorageService("data");
 
 bool running = true;
 
@@ -61,6 +64,8 @@ while (running)
                 Description = description,
                 Amount = amount
             };
+
+            storageService.SaveTransaction(transaction);
 
             Console.WriteLine();
             Console.WriteLine("Transaktion erstellt:");
