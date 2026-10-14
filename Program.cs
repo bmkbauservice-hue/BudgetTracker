@@ -96,7 +96,46 @@ while (running)
             break;
 
         case "3":
-            Console.WriteLine("Bericht kommt später.");
+            Console.Write("Startdatum (yyyy-MM-dd): ");
+            string? fromInput = Console.ReadLine();
+
+            Console.Write("Enddatum (yyyy-MM-dd): ");
+            string? toInput = Console.ReadLine();
+
+            if (!DateOnly.TryParse(fromInput, out DateOnly from) ||
+                !DateOnly.TryParse(toInput, out DateOnly to))
+            {
+                Console.WriteLine("Ungültiges Datum.");
+                break;
+            }
+
+            var transactions = storageService
+                .LoadTransactions(from, to)
+                .ToList();
+
+            Console.WriteLine();
+
+            foreach (var item in transactions)
+            {
+                Console.WriteLine(
+                    $"{item.Timestamp:yyyy-MM-dd} | {item.Type} | {item.Description} | {item.Amount:C}");
+            }
+
+            decimal income = transactions
+                .Where(t => t.Type == TransactionType.Income)
+                .Sum(t => t.Amount);
+
+            decimal expenses = transactions
+                .Where(t => t.Type == TransactionType.Expense)
+                .Sum(t => t.Amount);
+
+            decimal balance = income - expenses;
+
+            Console.WriteLine();
+            Console.WriteLine($"Einnahmen: {income:C}");
+            Console.WriteLine($"Ausgaben:  {expenses:C}");
+            Console.WriteLine($"Saldo:     {balance:C}");
+
             break;
 
         case "0":

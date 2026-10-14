@@ -74,4 +74,38 @@ public class StorageService
         return false;
     }
 
+
+    // Lädt alle Transaktionen aus einem bestimmten Datumsbereich.
+    public IEnumerable<Transaction> LoadTransactions(DateOnly from, DateOnly to)
+    {
+        List<Transaction> allTransactions = new();
+
+        string[] files = Directory.GetFiles(_dataDirectory, "*.json");
+
+        foreach (string file in files)
+        {
+            string fileName = Path.GetFileNameWithoutExtension(file);
+
+            if (!DateOnly.TryParse(fileName, out DateOnly day))
+            {
+                continue;
+            }
+
+            if (day < from || day > to)
+            {
+                continue;
+            }
+
+            string json = File.ReadAllText(file);
+
+            List<Transaction> transactions =
+                JsonSerializer.Deserialize<List<Transaction>>(json, _jsonOptions)
+                ?? new List<Transaction>();
+
+            allTransactions.AddRange(transactions);
+        }
+
+        return allTransactions;
+    }
+
 }
