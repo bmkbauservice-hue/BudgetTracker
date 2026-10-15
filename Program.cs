@@ -3,6 +3,13 @@ using BudgetTracker.Services;
 using BudgetTracker.Exceptions;
 
 var storageService = new StorageService("data");
+var transactionService = new TransactionService(storageService);
+
+transactionService.TransactionAdded += (sender, e) =>
+{
+    Console.WriteLine();
+    Console.WriteLine($"Event: Transaktion '{e.Transaction.Description}' wurde hinzugefügt.");
+};
 
 bool running = true;
 
@@ -68,7 +75,7 @@ while (running)
                 Amount = amount
             };
 
-            storageService.SaveTransaction(transaction);
+            transactionService.AddTransaction(transaction);
 
             Console.WriteLine();
             Console.WriteLine("Transaktion erstellt:");
