@@ -1,5 +1,6 @@
 using BudgetTracker.Models;
 using BudgetTracker.Services;
+using BudgetTracker.Exceptions;
 
 var storageService = new StorageService("data");
 
@@ -20,8 +21,10 @@ while (running)
     Console.Write("Auswahl: ");
     string? input = Console.ReadLine();
 
-    switch (input)
+    try
     {
+        switch (input)
+        {
         case "1":
             TransactionType type;
 
@@ -172,6 +175,17 @@ while (running)
         default:
             Console.WriteLine("Ungültige Auswahl.");
             break;
+        }
+    }
+    catch (StorageException ex)
+    {
+        Console.WriteLine();
+        Console.WriteLine($"Fehler: {ex.Message}");
+    }
+    catch (Exception)
+    {
+        Console.WriteLine();
+        Console.WriteLine("Ein unerwarteter Fehler ist aufgetreten.");
     }
 
     if (running)

@@ -1,6 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using BudgetTracker.Models;
+using BudgetTracker.Exceptions;
 
 namespace BudgetTracker.Services;
 
@@ -23,89 +24,122 @@ public class StorageService
     // Speichert eine Transaktion in der JSON-Datei des jeweiligen Tages.
     public void SaveTransaction(Transaction transaction)
     {
-        string fileName = $"{transaction.Timestamp:yyyy-MM-dd}.json";
-        string filePath = Path.Combine(_dataDirectory, fileName);
-
-        List<Transaction> transactions = new();
-
-        if (File.Exists(filePath))
+        try
         {
-            string json = File.ReadAllText(filePath);
+            string fileName = $"{transaction.Timestamp:yyyy-MM-dd}.json";
+            string filePath = Path.Combine(_dataDirectory, fileName);
 
-            transactions =
-                JsonSerializer.Deserialize<List<Transaction>>(json, _jsonOptions)
-                ?? new List<Transaction>();
+            List<Transaction> transactions = new();
+
+            if (File.Exists(filePath))
+            {
+                string json = File.ReadAllText(filePath);
+
+                transactions =
+                    JsonSerializer.Deserialize<List<Transaction>>(json, _jsonOptions)
+                    ?? new List<Transaction>();
+            }
+
+            transactions.Add(transaction);
+
+            string newJson = JsonSerializer.Serialize(transactions, _jsonOptions);
+            File.WriteAllText(filePath, newJson);
         }
-
-        transactions.Add(transaction);
-
-        string newJson = JsonSerializer.Serialize(transactions, _jsonOptions);
-        File.WriteAllText(filePath, newJson);
+        catch (JsonException ex)
+        {
+            throw new StorageException("Die JSON-Datei konnte nicht gelesen werden.", ex);
+        }
+        catch (IOException ex)
+        {
+            throw new StorageException("Beim Zugriff auf die Datei ist ein Fehler aufgetreten.", ex);
+        }
     }
 
     // Entfernt eine Transaktion anhand ihrer Id aus den gespeicherten Dateien.
     public bool RemoveTransaction(Guid id)
     {
-        string[] files = Directory.GetFiles(_dataDirectory, "*.json");
-
-        foreach (string file in files)
+        try
         {
-            string json = File.ReadAllText(file);
+            string[] files = Directory.GetFiles(_dataDirectory, "*.json");
 
-            List<Transaction> transactions =
-                JsonSerializer.Deserialize<List<Transaction>>(json, _jsonOptions)
-                ?? new List<Transaction>();
-
-            var transaction = transactions.FirstOrDefault(t => t.Id == id);
-
-            if (transaction is null)
+            foreach (string file in files)
             {
-                continue;
+                string json = File.ReadAllText(file);
+
+                List<Transaction> transactions =
+                    JsonSerializer.Deserialize<List<Transaction>>(json, _jsonOptions)
+                    ?? new List<Transaction>();
+
+                var transaction = transactions.FirstOrDefault(t => t.Id == id);
+
+                if (transaction is null)
+                {
+                    continue;
+                }
+
+                transactions.Remove(transaction);
+
+                string newJson = JsonSerializer.Serialize(transactions, _jsonOptions);
+                File.WriteAllText(file, newJson);
+
+                return true;
             }
 
-            transactions.Remove(transaction);
-
-            string newJson = JsonSerializer.Serialize(transactions, _jsonOptions);
-            File.WriteAllText(file, newJson);
-
-            return true;
+            return false;
         }
-
-        return false;
+        catch (JsonException ex)
+        {
+            throw new StorageException("Die JSON-Datei konnte nicht gelesen werden.", ex);
+        }
+        catch (IOException ex)
+        {
+            throw new StorageException("Beim Zugriff auf die Datei ist ein Fehler aufgetreten.", ex);
+        }
     }
 
 
     // Lädt alle Transaktionen aus einem bestimmten Datumsbereich.
     public IEnumerable<Transaction> LoadTransactions(DateOnly from, DateOnly to)
     {
-        List<Transaction> allTransactions = new();
-
-        string[] files = Directory.GetFiles(_dataDirectory, "*.json");
-
-        foreach (string file in files)
+        try
         {
-            string fileName = Path.GetFileNameWithoutExtension(file);
+            List<Transaction> allTransactions = new();
 
-            if (!DateOnly.TryParse(fileName, out DateOnly day))
+            string[] files = Directory.GetFiles(_dataDirectory, "*.json");
+
+            foreach (string file in files)
             {
-                continue;
+                string fileName = Path.GetFileNameWithoutExtension(file);
+
+                if (!DateOnly.TryParse(fileName, out DateOnly day))
+                {
+                    continue;
+                }
+
+                if (day < from || day > to)
+                {
+                    continue;
+                }
+
+                string json = File.ReadAllText(file);
+
+                List<Transaction> transactions =
+                    JsonSerializer.Deserialize<List<Transaction>>(json, _jsonOptions)
+                    ?? new List<Transaction>();
+
+                allTransactions.AddRange(transactions);
             }
 
-            if (day < from || day > to)
-            {
-                continue;
-            }
-
-            string json = File.ReadAllText(file);
-
-            List<Transaction> transactions =
-                JsonSerializer.Deserialize<List<Transaction>>(json, _jsonOptions)
-                ?? new List<Transaction>();
-
-            allTransactions.AddRange(transactions);
+            return allTransactions;
         }
-
-        return allTransactions;
+        catch (JsonException ex)
+        {
+            throw new StorageException("Die JSON-Datei konnte nicht gelesen werden.", ex);
+        }
+        catch (IOException ex)
+        {
+            throw new StorageException("Beim Zugriff auf die Datei ist ein Fehler aufgetreten.", ex);
+        }
     }
 
 }
