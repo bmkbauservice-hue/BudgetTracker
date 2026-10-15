@@ -114,6 +114,33 @@ while (running)
                 .ToList();
 
             Console.WriteLine();
+            Console.WriteLine("Filter:");
+            Console.WriteLine("0 - Alle");
+            Console.WriteLine("1 - Income");
+            Console.WriteLine("2 - Expense");
+            Console.Write("Auswahl: ");
+
+            string? filterInput = Console.ReadLine();
+
+            if (filterInput == "1")
+            {
+                transactions = transactions
+                    .Where(t => t.Type == TransactionType.Income)
+                    .ToList();
+            }
+            else if (filterInput == "2")
+            {
+                transactions = transactions
+                    .Where(t => t.Type == TransactionType.Expense)
+                    .ToList();
+            }
+            else if (filterInput != "0")
+            {
+                Console.WriteLine("Ungültige Auswahl.");
+                break;
+            }
+
+            Console.WriteLine();
 
             foreach (var item in transactions)
             {
