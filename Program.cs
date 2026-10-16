@@ -4,12 +4,9 @@ using BudgetTracker.Exceptions;
 
 var storageService = new StorageService("data");
 var transactionService = new TransactionService(storageService);
+var loggerService = new LoggerService();
 
-transactionService.TransactionAdded += (sender, e) =>
-{
-    Console.WriteLine();
-    Console.WriteLine($"Event: Transaktion '{e.Transaction.Description}' wurde hinzugefügt.");
-};
+transactionService.TransactionAdded += loggerService.OnTransactionAdded;
 
 bool running = true;
 
